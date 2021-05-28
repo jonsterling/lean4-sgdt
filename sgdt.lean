@@ -1,5 +1,23 @@
 universe u
 
+
+def from_singleton {P : Prop} : Subtype (fun x : Unit => P) → P := by
+ intro x
+ cases x
+ assumption
+
+def to_singleton {P : Prop} : P → Subtype (fun x : Unit => P) := by
+intro x
+constructor
+focus assumption
+focus constructor
+
+
+@[simp] def Eq.mpr_mp_cancel : Eq.mpr (p : a = b) (Eq.mp (q : a = b) x) = x := by
+induction q
+simp [Eq.mpr,Eq.mp]
+
+
 -- Currently needed until 'axiom' is fixed, see https://github.com/leanprover/lean4/issues/496
 constant mysorry : ∀ {A}, A := sorry
 
@@ -12,10 +30,6 @@ namespace ltr
   constant fix : (▷ A → A) → A := mysorry
   constant ap : ▷ (A → B) → ▷ A → ▷ B := mysorry
   infixl:100 "⊛" => ap
-
-  @[simp] def Eq.mpr_mp_cancel : Eq.mpr (p : a = b) (Eq.mp (q : a = b) x) = x := by
-  induction q
-  simp [Eq.mpr,Eq.mp]
 
   namespace fix
     axiom red : {f : ▷ A → A} → fix f = f (next (fix f))
@@ -39,7 +53,7 @@ namespace ltr
   end fix
 
   namespace ap
-    axiom red : ∀ {f : (A → B)} {x : A}, (next f) ⊛ (next x) = next (f x)
+    @[simp] axiom red : ∀ {f : (A → B)} {x : A}, (next f) ⊛ (next x) = next (f x)
   end ap
 end ltr
 
@@ -60,23 +74,23 @@ def lift (A : Type u) : Type u :=
 ltr.fix λ R =>
 sum A ([▷] R)
 
-namespace lift
-  variable {A : Type u}
+postfix:max "⊥" => lift
 
-  def now (x : A) : lift A :=
+namespace lift
+  def now (x : a) : a⊥ :=
   ltr.fix.intro $ sum.inl x
 
-  def step (x : ▷ lift A) : lift A :=
+  def step (x : ▷ a⊥) : a⊥ :=
   ltr.fix.intro $ sum.inr $ by
   rw [dltr.red]
   exact x
 
-  instance : domain (lift A) where
+  instance : domain a⊥ where
     step := lift.step
 
-  def bind [domain b] (f : A → b) : lift A → b := by
-  apply @ltr.fix (lift A → b)
-  intro recbind m
+  def bind [domain b] (f : a → b) : a⊥ → b :=
+  ltr.fix λ recbind => by
+  intro m
   match ltr.fix.elim m with
   | sum.inl x =>
     exact f x
@@ -86,11 +100,10 @@ namespace lift
       simp at m'
       exact m'
 
-  def bind.red [domain b]  (f : A → b) (x : A) : bind f (lift.now x) = f x := by
-    simp [bind, now]
-    rw [ltr.fix.red]
-    simp
-
+  def bind.now.red [domain b]  (f : a → b) (x : a) : bind f (lift.now x) = f x := by
+  simp [bind, now]
+  rw [ltr.fix.red]
+  simp
 end lift
 
 instance [domain a] [domain b] : domain (a × b) where
