@@ -2,9 +2,9 @@ universe u
 
 
 def from_singleton {P : Prop} : Subtype (fun x : Unit => P) → P := by
- intro x
- cases x
- assumption
+intro x
+cases x
+assumption
 
 def to_singleton {P : Prop} : P → Subtype (fun x : Unit => P) := by
 intro x
@@ -13,7 +13,7 @@ focus assumption
 focus constructor
 
 
-@[simp] def Eq.mpr_mp_cancel : Eq.mpr (p : a = b) (Eq.mp (q : a = b) x) = x := by
+@[simp] constant Eq.mpr_mp_cancel : Eq.mpr (p : a = b) (Eq.mp (q : a = b) x) = x := by
 induction q
 simp [Eq.mpr,Eq.mp]
 
@@ -100,7 +100,7 @@ namespace lift
       simp at m'
       exact m'
 
-  def bind.now.red [domain b]  (f : a → b) (x : a) : bind f (lift.now x) = f x := by
+  constant bind.now.red [domain b]  (f : a → b) (x : a) : bind f (lift.now x) = f x := by
   simp [bind, now]
   rw [ltr.fix.red]
   simp
@@ -117,3 +117,6 @@ instance [domain b] : domain (a → b) where
   λ f x =>
   domain.step $
   f ⊛ ltr.next x
+
+def domain.fix [domain a] (f : a -> a) : a :=
+ltr.fix $ f ∘ domain.step
