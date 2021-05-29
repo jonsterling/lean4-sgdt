@@ -1,6 +1,5 @@
 universe u
 
-
 def from_singleton {P : Prop} : Subtype (fun x : Unit => P) → P := by
 intro x
 cases x
@@ -19,16 +18,14 @@ simp [Eq.mpr,Eq.mp]
 
 
 -- Currently needed until 'axiom' is fixed, see https://github.com/leanprover/lean4/issues/496
-constant mysorry : ∀ {A}, A := sorry
-
-constant ltr : Type u -> Type u := mysorry
+axiom ltr : Type u -> Type u
 prefix:100 "▷" => ltr
 
 namespace ltr
   variable {A B : Type u}
-  constant next : A → ▷ A := mysorry
-  constant fix : (▷ A → A) → A := mysorry
-  constant ap : ▷ (A → B) → ▷ A → ▷ B := mysorry
+  axiom next : A → ▷ A
+  axiom fix : (▷ A → A) → A
+  axiom ap : ▷ (A → B) → ▷ A → ▷ B
   infixl:100 "⊛" => ap
 
   namespace fix
@@ -88,7 +85,7 @@ namespace lift
   instance : domain a⊥ where
     step := lift.step
 
-  def bind [domain b] (f : a → b) : a⊥ → b :=
+  noncomputable def bind [domain b] (f : a → b) : a⊥ → b :=
   ltr.fix λ recbind => by
   intro m
   match ltr.fix.elim m with
@@ -106,17 +103,17 @@ namespace lift
   simp
 end lift
 
-instance [domain a] [domain b] : domain (a × b) where
+noncomputable instance [domain a] [domain b] : domain (a × b) where
   step :=
   λ p =>
   ⟨domain.step (ltr.next (λ x => x.1) ⊛ p),
    domain.step (ltr.next (λ x => x.2) ⊛ p)⟩
 
-instance [domain b] : domain (a → b) where
+noncomputable instance [domain b] : domain (a → b) where
   step :=
   λ f x =>
   domain.step $
   f ⊛ ltr.next x
 
-def domain.fix [domain a] (f : a -> a) : a :=
+noncomputable def domain.fix [domain a] (f : a -> a) : a :=
 ltr.fix $ f ∘ domain.step
