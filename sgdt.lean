@@ -103,13 +103,12 @@ namespace lift
   macro x:term "←" m:term "in" n:term : term =>
     `(bind (fun $x:term => $n:term) $m:term)
 
-  constant bind.now.red [domain b]  (f : a → b) (x : a) : bind f (lift.now x) = f x := by
+  @[simp] constant bind.now.red [domain b]  (f : a → b) (x : a) : bind f (lift.now x) = f x := by
   simp [bind, now]
   rw [ltr.fix.red]
   simp
 
-  constant bind.step.red [domain b] (f : a -> b) : is_strict (bind f) :=
-  fun x =>
+  @[simp] constant bind.step.red [domain b] (f : a -> b) (x : _) : bind f (domain.step x) = domain.step (ltr.next (bind f) ⊛ x) :=
   fix rec => by
   simp [bind,domain.step,step]
   rw [ltr.fix.red]
@@ -119,20 +118,17 @@ namespace lift
 end lift
 
 
+def foo : {p : a → Prop} → {x : a // p x} → a :=
+  fun x =>
+  x
+
 class storable (a : Type) [domain a] where
   store : [domain b] → (a → b) → (a ⊸ b)
 
 noncomputable instance : storable a⊥ where
-  store {b} _ f := by
-  let f' : a⊥ → b :=
-    fun m =>
-    x ← m in f $ lift.now x
-
-  exists f'
-  simp [is_strict]
-  intro _
-  rw [lift.bind.step.red]
-
+  store {b} _ f :=
+  ⟨fun m => x ← m in f $ lift.now x,
+   fun _ => by simp [is_strict]⟩
 
 noncomputable instance {a b : Type u} [domain a] [domain b] : domain (a × b) where
   step :=
