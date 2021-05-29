@@ -70,6 +70,10 @@ def strict_hom (a b : Type u) [domain a] [domain b] :=
 
 infixr:50 "⊸" => strict_hom
 
+instance [domain a] [domain b] : CoeFun (strict_hom a b) (fun _ => a → b) where
+  coe f := f.val
+
+
 def lift (A : Type u) : Type u :=
 fix R =>
 sum A ([▷] R)
@@ -145,7 +149,7 @@ noncomputable def bot [domain a] : a :=
 fix x =>
 domain.step x
 
-def strict_preserves_bot [domain a] [domain b] (f : a ⊸ b) : f.val bot = bot :=
+def strict_preserves_bot [domain a] [domain b] (f : a ⊸ b) : f bot = bot :=
   fix rec => by
   rw [ltr.lex] at rec
   simp [bot]
