@@ -17,7 +17,6 @@ induction q
 simp [Eq.mpr,Eq.mp]
 
 
--- Currently needed until 'axiom' is fixed, see https://github.com/leanprover/lean4/issues/496
 axiom ltr : Type u -> Type u
 prefix:100 "▷" => ltr
 
@@ -106,8 +105,8 @@ end lift
 noncomputable instance [domain a] [domain b] : domain (a × b) where
   step :=
   λ p =>
-  ⟨domain.step (ltr.next (λ x => x.1) ⊛ p),
-   domain.step (ltr.next (λ x => x.2) ⊛ p)⟩
+  ⟨domain.step $ ltr.next (λ x => x.1) ⊛ p,
+   domain.step $ ltr.next (λ x => x.2) ⊛ p⟩
 
 noncomputable instance [domain b] : domain (a → b) where
   step :=
