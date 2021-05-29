@@ -8,10 +8,6 @@ simp [Eq.mpr,Eq.mp]
 induction q
 simp [Eq.mpr,Eq.mp]
 
-inductive sum (A B : Type u) :=
-| inl : A → sum A B
-| inr : B → sum A B
-
 axiom ltr : Sort u -> Sort u
 prefix:100 "▷" => ltr
 
@@ -97,17 +93,17 @@ def strict_preserves_bot [domain a] [domain b] (f : a ⊸ b) : f ⊥ = ⊥ :=
 
 def lift (A : Type u) : Type u :=
 fix R =>
-sum A ([▷] R)
+Sum A ([▷] R)
 
 macro "[" a:term "]⊥" : term =>
 `(lift $a:term)
 
 namespace lift
   def now (x : a) : [a]⊥ :=
-  ltr.fix.intro $ sum.inl x
+  ltr.fix.intro $ Sum.inl x
 
   def step (x : ▷ [a]⊥) : [a]⊥ :=
-  ltr.fix.intro $ sum.inr $ by
+  ltr.fix.intro $ Sum.inr $ by
   rw [dltr.red]
   exact x
 
@@ -117,9 +113,9 @@ namespace lift
   noncomputable def bind [domain b] (f : a → b) : [a]⊥ → b :=
   fix recbind => fun m => by
   match ltr.fix.elim m with
-  | sum.inl x =>
+  | Sum.inl x =>
     exact f x
-  | sum.inr m' =>
+  | Sum.inr m' =>
     apply domain.step
     exact recbind ⊛ by
       simp at m'
