@@ -148,3 +148,8 @@ noncomputable instance [domain b] : domain (a → b) where
 
 noncomputable def domain.fix [domain a] (f : a -> a) : a :=
 fix x => f $ domain.step x
+
+
+noncomputable def bot [domain a] : a :=
+fix x =>
+domain.step x
