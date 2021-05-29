@@ -54,13 +54,15 @@ prefix:100 "[▷]" => dltr
 
 @[simp] axiom dltr.red : {A : Type u} → [▷] ltr.next A = ▷ A
 
+macro "fix " p:term " => " d:term : term =>
+`(ltr.fix fun $p:term => $d:term)
+
 
 class domain (A : Type u) where
 step : ▷ A → A
 
-
-macro "fix " p:term " => " d:term : term =>
-`(ltr.fix fun $p:term => $d:term)
+noncomputable def domain.fix [domain a] (f : a -> a) : a :=
+fix x => f $ domain.step x
 
 def is_strict [domain a] [domain b] (f : a -> b) :=
 ∀ x : ▷ a, f (domain.step x) = domain.step (ltr.next f ⊛ x)
@@ -70,29 +72,49 @@ def strict_hom (a b : Type u) [domain a] [domain b] :=
 
 infixr:50 "⊸" => strict_hom
 
-instance [domain a] [domain b] : CoeFun (strict_hom a b) (fun _ => a → b) where
+instance [domain a] [domain b] : CoeFun (a ⊸ b) (fun _ => a → b) where
   coe f := f.val
+
+noncomputable def bot [domain a] : a :=
+fix x =>
+domain.step x
+
+notation "⊥" => bot
+
+def strict_preserves_bot [domain a] [domain b] (f : a ⊸ b) : f ⊥ = ⊥ :=
+  fix rec => by
+  rw [ltr.lex] at rec
+  simp [bot]
+  rw [ltr.fix.red,f.property,ltr.ap.red]
+  simp [bot] at rec
+  rw [rec]
+  apply Eq.symm
+  exact Eq.trans (by rw [ltr.fix.red]) (by simp)
+
+
+
 
 
 def lift (A : Type u) : Type u :=
 fix R =>
 sum A ([▷] R)
 
-postfix:max "⊥" => lift
+macro "[" a:term "]⊥" : term =>
+`(lift $a:term)
 
 namespace lift
-  def now (x : a) : a⊥ :=
+  def now (x : a) : [a]⊥ :=
   ltr.fix.intro $ sum.inl x
 
-  def step (x : ▷ a⊥) : a⊥ :=
+  def step (x : ▷ [a]⊥) : [a]⊥ :=
   ltr.fix.intro $ sum.inr $ by
   rw [dltr.red]
   exact x
 
-  instance : domain a⊥ where
+  instance : domain [a]⊥ where
     step := lift.step
 
-  noncomputable def bind [domain b] (f : a → b) : a⊥ → b :=
+  noncomputable def bind [domain b] (f : a → b) : [a]⊥ → b :=
   fix recbind => fun m => by
   match ltr.fix.elim m with
   | sum.inl x =>
@@ -124,7 +146,7 @@ end lift
 class storable (a : Type) [domain a] where
   store : [domain b] → (a → b) → (a ⊸ b)
 
-noncomputable instance : storable a⊥ where
+noncomputable instance : storable [a]⊥ where
   store {b} _ f :=
   ⟨fun m => x ← m in f $ lift.now x,
    fun _ => by simp [is_strict]⟩
@@ -140,21 +162,3 @@ noncomputable instance [domain b] : domain (a → b) where
   fun f x =>
   domain.step $
   f ⊛ ltr.next x
-
-noncomputable def domain.fix [domain a] (f : a -> a) : a :=
-fix x => f $ domain.step x
-
-
-noncomputable def bot [domain a] : a :=
-fix x =>
-domain.step x
-
-def strict_preserves_bot [domain a] [domain b] (f : a ⊸ b) : f bot = bot :=
-  fix rec => by
-  rw [ltr.lex] at rec
-  simp [bot]
-  rw [ltr.fix.red,f.property,ltr.ap.red]
-  simp [bot] at rec
-  rw [rec]
-  apply Eq.symm
-  exact Eq.trans (by rw [ltr.fix.red]) (by simp)
