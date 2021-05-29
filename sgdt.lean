@@ -8,6 +8,9 @@ simp [Eq.mpr,Eq.mp]
 induction q
 simp [Eq.mpr,Eq.mp]
 
+inductive sum (A B : Type u) :=
+| inl : A → sum A B
+| inr : B → sum A B
 
 axiom ltr : Sort u -> Sort u
 prefix:100 "▷" => ltr
@@ -55,12 +58,18 @@ prefix:100 "[▷]" => dltr
 class domain (A : Type u) where
 step : ▷ A → A
 
-inductive sum (A B : Type u) :=
-| inl : A → sum A B
-| inr : B → sum A B
 
 macro "fix " p:term " => " d:term : term =>
 `(ltr.fix fun $p:term => $d:term)
+
+def is_strict [domain a] [domain b] (f : a -> b) :=
+∀ x : ▷ a, f (domain.step x) = domain.step (ltr.next f ⊛ x)
+
+def strict_hom (a b : Type u) [domain a] [domain b] :=
+{f : a → b // is_strict f}
+
+infixr:50 "⊸" => strict_hom
+
 
 def lift (A : Type u) : Type u :=
 fix R =>
@@ -91,13 +100,13 @@ namespace lift
       simp at m'
       exact m'
 
+  macro x:term "←" m:term "in" n:term : term =>
+    `(bind (fun $x:term => $n:term) $m:term)
+
   constant bind.now.red [domain b]  (f : a → b) (x : a) : bind f (lift.now x) = f x := by
   simp [bind, now]
   rw [ltr.fix.red]
   simp
-
-  def is_strict [domain a] [domain b] (f : a -> b) :=
-  ∀ x : ▷ a, f (domain.step x) = domain.step (ltr.next f ⊛ x)
 
   constant bind.step.red [domain b] (f : a -> b) : is_strict (bind f) :=
   fun x =>
@@ -108,6 +117,22 @@ namespace lift
   exact Eq.trans (by rw [ltr.fix.red]) (by simp)
 
 end lift
+
+
+class storable (a : Type) [domain a] where
+  store : [domain b] → (a → b) → (a ⊸ b)
+
+noncomputable instance : storable a⊥ where
+  store {b} _ f := by
+  let f' : a⊥ → b :=
+    fun m =>
+    x ← m in f $ lift.now x
+
+  exists f'
+  simp [is_strict]
+  intro _
+  rw [lift.bind.step.red]
+
 
 noncomputable instance {a b : Type u} [domain a] [domain b] : domain (a × b) where
   step :=
