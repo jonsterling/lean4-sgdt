@@ -70,7 +70,6 @@ def strict_hom (a b : Type u) [domain a] [domain b] :=
 
 infixr:50 "⊸" => strict_hom
 
-
 def lift (A : Type u) : Type u :=
 fix R =>
 sum A ([▷] R)
@@ -146,11 +145,11 @@ noncomputable def bot [domain a] : a :=
 fix x =>
 domain.step x
 
-def strict_preserves_bot [domain a] [domain b] (f : a → b) : is_strict f → f bot = bot :=
-  fun H => fix rec => by
+def strict_preserves_bot [domain a] [domain b] (f : a ⊸ b) : f.val bot = bot :=
+  fix rec => by
   rw [ltr.lex] at rec
   simp [bot]
-  rw [ltr.fix.red,H,ltr.ap.red]
+  rw [ltr.fix.red,f.property,ltr.ap.red]
   simp [bot] at rec
   rw [rec]
   apply Eq.symm
