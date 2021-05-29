@@ -118,10 +118,6 @@ namespace lift
 end lift
 
 
-def foo : {p : a → Prop} → {x : a // p x} → a :=
-  fun x =>
-  x
-
 class storable (a : Type) [domain a] where
   store : [domain b] → (a → b) → (a ⊸ b)
 
