@@ -149,3 +149,13 @@ fix x => f $ domain.step x
 noncomputable def bot [domain a] : a :=
 fix x =>
 domain.step x
+
+def strict_preserves_bot [domain a] [domain b] (f : a → b) : is_strict f → f bot = bot :=
+  fun H => fix rec => by
+  rw [ltr.lex] at rec
+  simp [bot]
+  rw [ltr.fix.red,H,ltr.ap.red]
+  simp [bot] at rec
+  rw [rec]
+  apply Eq.symm
+  exact Eq.trans (by rw [ltr.fix.red]) (by simp)
