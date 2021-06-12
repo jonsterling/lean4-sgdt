@@ -115,11 +115,23 @@ def now_approx_step_false : ∀ (x : Unit) (y : ▷ Σ), Sp.approx (lift.now x) 
     apply Eq.symm
     assumption
 
-def now_approx_inversion : Sp.approx (lift.now PUnit.unit) y → y = lift.now PUnit.unit := sorry
-
 def abort : False → a := by
   intro x
   cases x
+
+def now_approx_inversion : Sp.approx (lift.now PUnit.unit) y → y = lift.now PUnit.unit := by
+  simp [Sp.approx]
+  rw [ltr.fix.red]
+  intro H
+  cases H with
+  | now => simp_all
+  | step_now => simp_all
+  | step_step =>
+    apply abort
+    apply step_now_noconf
+    apply Eq.symm
+    assumption
+
 
 def sp_approx_f_trans : ∀ x y z, Sp.approx_f Sp.approx x y → Sp.approx_f Sp.approx y z → Sp.approx_f Sp.approx x z :=
   fix IH => by
