@@ -30,7 +30,7 @@ namespace ltr
   namespace fix
     axiom red : {f : ▷ A → A} → fix f = f (next (fix f))
 
-    variable {F : ▷ Type u → Type u}
+    variable {F : ▷ Sort u → Sort u}
 
     def intro : F (next (fix F)) → fix F := by
     intro x
@@ -52,10 +52,25 @@ namespace ltr
   @[simp] axiom seq.red : ∀ {f : (A → B)} {x : A}, next f ⊛ next x = next (f x)
 end ltr
 
-axiom dltr : ▷ Type u -> Type u
+class flasque (A : Type u) : Prop where
+  next_surj : ∀ x : ▷ A, ∃ y : A, x = pure y
+
+axiom exists_ltr {A : Type u} [flasque A] [Nonempty A] {P : A → Prop} : (▷ ∃ x : A, P x) → ∃ x : A, ▷ P x
+
+axiom Nat_next_surj : ∀ x : ▷ Nat, ∃ y : Nat, x = pure y
+
+instance : flasque Nat where
+  next_surj := Nat_next_surj
+
+
+axiom dltr : ▷ Sort u -> Sort u
 prefix:100 "[▷]" => dltr
 
-@[simp] axiom dltr.red : {A : Type u} → [▷] next A = ▷ A
+@[simp] axiom dltr.red : {A : Sort u} → [▷] next A = ▷ A
 
 macro "fix " p:term " => " d:term : term =>
 `(ltr.fix fun $p:term => $d:term)
+
+
+axiom forall_ltr {A : Type u} {P : A → Prop} : (▷ ∀ x : A, P x) → ∀ x : ▷ A, [▷] (next P ⊛ x)
+axiom forall_ltr2 {A : Type u} {P : A → A → Prop} : (▷ ∀ x y : A, P x y) → ∀ x y : ▷ A, [▷] (next P ⊛ x ⊛ y)

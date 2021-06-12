@@ -25,6 +25,19 @@ domain.step x
 
 notation "⊥" => bot
 
+noncomputable def delay [domain a] : a → a :=
+domain.step ∘ next
+
+prefix "δ" => delay
+
+noncomputable def delay_n [domain a] (n : Nat) (x : a) : a :=
+match n with
+| Nat.zero => x
+| Nat.succ n => δ (delay_n n x)
+
+notation "δ^[" n "]" =>
+  delay_n n
+
 def strict_preserves_bot [domain a] [domain b] (f : a ⊸ b) : f ⊥ = ⊥ :=
   fix rec => by
   rw [ltr.lex] at rec
