@@ -75,6 +75,11 @@ end lift
 def Sp := [Unit]⊥
 notation "Σ" => Sp
 
+instance : domain Σ where
+  step := by
+    simp [Sp]
+    apply domain.step
+
 inductive Sp.approx_f (H : ▷ (Sp → Sp → Prop)) : Sp → Sp → Prop :=
 | now : ∀ x y x' y', x' = lift.now x → y' = lift.now y → approx_f H x' y'
 | step_now : ∀ x y x' y', x' = lift.step x → y' = lift.now y →  approx_f H x' y'
@@ -90,6 +95,17 @@ noncomputable def approx [domain a] : a → a → Prop :=
   Sp.approx (φ x) (φ y)
 
 infix:100 "⊑" => approx
+
+noncomputable def approx_lift_fwd (x y : Σ) : x ⊑ y → Sp.approx x y := by
+  intro h
+  simp [approx] at h
+  exact h id
+
+-- In think following principle will not be true unless we have (some version of) the Phoa principle.
+-- The Phoa principle characterizes maps Σ→Σ, not unlike the axiom that ensures any function on the affine line
+-- is a polynomial.
+
+-- noncomputable def approx_lift_bwd (x y : Σ) : Sp.approx x y → x ⊑ y := by
 
 def step_now_noconf : ∀ x (y : a), lift.step x = lift.now y → False := by
   intro x y P
@@ -131,7 +147,6 @@ def now_approx_inversion : Sp.approx (lift.now PUnit.unit) y → y = lift.now PU
     apply step_now_noconf
     apply Eq.symm
     assumption
-
 
 def sp_approx_f_trans : ∀ x y z, Sp.approx_f Sp.approx x y → Sp.approx_f Sp.approx y z → Sp.approx_f Sp.approx x z :=
   fix IH => by
